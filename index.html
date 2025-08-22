@@ -64,30 +64,80 @@
       width: 0%;
       transition: width 0.3s ease;
     }
+    .history-btn {
+      margin-top: 20px;
+      background: #1a73e8;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      width: 100%;
+    }
+    .history-btn:hover {
+      background: #155ab6;
+    }
+    .history {
+      display: none;
+      margin-top: 15px;
+      padding: 10px;
+      border: 1px solid #dadce0;
+      border-radius: 6px;
+      background: #f1f3f4;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+    .history h3 {
+      margin-top: 0;
+      font-size: 16px;
+      color: #202124;
+    }
+    .history ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .history ul li {
+      padding: 5px 0;
+      font-size: 14px;
+      border-bottom: 1px solid #dadce0;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>Password Strength Analyzer</h2>
     <div class="input-wrapper">
-      <input type="password" id="password" placeholder="Enter password" oninput="checkStrength()" maxlength="20" />
+      <input type="password" id="password" placeholder="Enter password" maxlength="20" />
       <span class="toggle-btn" onclick="togglePassword()">👁</span>
     </div>
+    <button class="history-btn" onclick="analyzeAndSave()">Analyze & Save</button>
     <div class="strength" id="strength-text">Strength: </div>
     <div class="bar"><div class="bar-fill" id="bar-fill"></div></div>
+    <button class="history-btn" onclick="toggleHistory()">Show/Hide History</button>
+    <div class="history" id="history">
+      <h3>History</h3>
+      <ul id="history-list"></ul>
+    </div>
   </div>
 
   <script>
-    function checkStrength() {
-      const pwd = document.getElementById("password").value;
-      const text = document.getElementById("strength-text");
-      const bar = document.getElementById("bar-fill");
-      let strength = 0;
+    let historyData = [];
 
+    function checkStrength(pwd) {
+      let strength = 0;
       if (pwd.length >= 8) strength++;
       if (/[A-Z]/.test(pwd)) strength++;
       if (/[0-9]/.test(pwd)) strength++;
       if (/[^A-Za-z0-9]/.test(pwd)) strength++;
+      return strength;
+    }
+
+    function analyzeAndSave() {
+      const pwd = document.getElementById("password").value;
+      const text = document.getElementById("strength-text");
+      const bar = document.getElementById("bar-fill");
+      let strength = checkStrength(pwd);
 
       let strengthText = "";
       let barColor = "";
@@ -120,6 +170,26 @@
       text.textContent = "Strength: " + strengthText;
       bar.style.width = barWidth;
       bar.style.background = barColor;
+
+      if (pwd) {
+        historyData.push({ password: pwd, strength: strengthText });
+        updateHistory();
+      }
+    }
+
+    function updateHistory() {
+      const list = document.getElementById("history-list");
+      list.innerHTML = "";
+      historyData.forEach((item, index) => {
+        let li = document.createElement("li");
+        li.textContent = `(${index+1}) ${item.password} - ${item.strength}`;
+        list.appendChild(li);
+      });
+    }
+
+    function toggleHistory() {
+      const history = document.getElementById("history");
+      history.style.display = (history.style.display === "none" || history.style.display === "") ? "block" : "none";
     }
 
     function togglePassword() {
@@ -127,10 +197,10 @@
       const toggleBtn = document.querySelector(".toggle-btn");
       if (input.type === "password") {
         input.type = "text";
-        toggleBtn.textContent = "🙈";  // change icon when visible
+        toggleBtn.textContent = "🙈";
       } else {
         input.type = "password";
-        toggleBtn.textContent = "👁";  // change icon back
+        toggleBtn.textContent = "👁";
       }
     }
   </script>
