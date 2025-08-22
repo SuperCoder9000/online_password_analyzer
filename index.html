@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Password Strength Analyzer</title>
+  <style>
+    /* ===== Base Styles (Google-like Clean Look) ===== */
+    body {
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+      background: #f5f6f7;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      color: #333;
+    }
+
+    .container {
+      background: #fff;
+      padding: 30px 40px;
+      border-radius: 16px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+      width: 400px;
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      font-size: 1.8rem;
+      color: #202124;
+    }
+
+    input[type="password"], input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      font-size: 1rem;
+    }
+
+    .toggle-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #1a73e8;
+      font-size: 0.9rem;
+      margin-bottom: 15px;
+    }
+
+    .strength-bar {
+      height: 10px;
+      border-radius: 6px;
+      background: #ddd;
+      margin: 15px 0;
+      overflow: hidden;
+    }
+
+    .strength-fill {
+      height: 100%;
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+
+    .strength-text {
+      font-weight: 500;
+      margin-bottom: 15px;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      background: #1a73e8;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #0c5fd3;
+    }
+
+    .history {
+      margin-top: 20px;
+      text-align: left;
+      display: none;
+    }
+
+    .history ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .history ul li {
+      background: #f1f3f4;
+      margin: 5px 0;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+
+    .show-history-btn {
+      background: #e8eaed;
+      color: #333;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Password Strength Analyzer</h1>
+    <input type="password" id="password" placeholder="Enter your password">
+    <button class="toggle-btn" onclick="togglePassword()">Show Password</button>
+
+    <div class="strength-bar">
+      <div class="strength-fill" id="strength-fill"></div>
+    </div>
+    <div class="strength-text" id="strength-text">Strength: N/A</div>
+
+    <button onclick="savePassword()">Save Password</button>
+    <button class="show-history-btn" onclick="toggleHistory()">Show History</button>
+
+    <div class="history" id="history">
+      <h3>Saved Passwords:</h3>
+      <ul id="history-list"></ul>
+    </div>
+  </div>
+
+  <script>
+    const passwordInput = document.getElementById("password");
+    const strengthFill = document.getElementById("strength-fill");
+    const strengthText = document.getElementById("strength-text");
+    const historyList = document.getElementById("history-list");
+    const historyDiv = document.getElementById("history");
+    let history = [];
+
+    // Password strength checker
+    passwordInput.addEventListener("input", () => {
+      const pwd = passwordInput.value;
+      analyzeStrength(pwd);
+    });
+
+    function analyzeStrength(password) {
+      let strength = 0;
+
+      if (password.length > 5) strength++;
+      if (password.length > 10) strength++;
+      if (/[A-Z]/.test(password)) strength++;
+      if (/[0-9]/.test(password)) strength++;
+      if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+      let width = (strength / 5) * 100;
+      let color;
+      let label;
+
+      if (strength <= 1) {
+        color = "red";
+        label = "Weak";
+      } else if (strength <= 3) {
+        color = "orange";
+        label = "Medium";
+      } else {
+        color = "green";
+        label = "Strong";
+      }
+
+      strengthFill.style.width = width + "%";
+      strengthFill.style.background = color;
+      strengthText.textContent = "Strength: " + label;
+    }
+
+    // Show/Hide password
+    function togglePassword() {
+      const type = passwordInput.type === "password" ? "text" : "password";
+      passwordInput.type = type;
+    }
+
+    // Save password (history in-memory)
+    function savePassword() {
+      const pwd = passwordInput.value;
+      if (pwd && pwd.length <= 20) {
+        history.push(pwd);
+        updateHistory();
+        passwordInput.value = "";
+        analyzeStrength("");
+      } else if (pwd.length > 20) {
+        alert("Password cannot exceed 20 characters!");
+      } else {
+        alert("Enter a password first!");
+      }
+    }
+
+    function updateHistory() {
+      historyList.innerHTML = "";
+      history.forEach((pwd, index) => {
+        const li = document.createElement("li");
+        li.textContent = pwd;
+        historyList.appendChild(li);
+      });
+    }
+
+    function toggleHistory() {
+      historyDiv.style.display = historyDiv.style.display === "none" ? "block" : "none";
+    }
+  </script>
+</body>
+</html>
