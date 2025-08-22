@@ -1,211 +1,137 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Password Strength Analyzer</title>
   <style>
-    /* ===== Base Styles (Google-like Clean Look) ===== */
     body {
-      font-family: "Segoe UI", Roboto, Arial, sans-serif;
-      background: #f5f6f7;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-      color: #333;
-    }
-
-    .container {
-      background: #fff;
-      padding: 30px 40px;
-      border-radius: 16px;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-      width: 400px;
-      text-align: center;
-    }
-
-    h1 {
-      margin-bottom: 20px;
-      font-size: 1.8rem;
+      font-family: Arial, sans-serif;
+      background: #f8f9fa;
       color: #202124;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
     }
-
-    input[type="password"], input[type="text"] {
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      max-width: 400px;
       width: 100%;
-      padding: 12px;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      margin-bottom: 10px;
-      font-size: 1rem;
     }
-
-    .toggle-btn {
-      background: none;
-      border: none;
-      cursor: pointer;
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
       color: #1a73e8;
-      font-size: 0.9rem;
-      margin-bottom: 15px;
     }
-
-    .strength-bar {
-      height: 10px;
+    .input-wrapper {
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+    input {
+      flex: 1;
+      padding: 10px 40px 10px 10px;
+      font-size: 16px;
+      border: 1px solid #dadce0;
       border-radius: 6px;
-      background: #ddd;
-      margin: 15px 0;
+    }
+    .toggle-btn {
+      position: absolute;
+      right: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #5f6368;
+      user-select: none;
+    }
+    .strength {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    .bar {
+      height: 8px;
+      border-radius: 4px;
+      margin-top: 8px;
+      background: #dadce0;
       overflow: hidden;
     }
-
-    .strength-fill {
+    .bar-fill {
       height: 100%;
       width: 0%;
-      transition: width 0.4s ease;
-    }
-
-    .strength-text {
-      font-weight: 500;
-      margin-bottom: 15px;
-    }
-
-    button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 10px;
-      background: #1a73e8;
-      color: white;
-      font-size: 1rem;
-      cursor: pointer;
-      margin-top: 10px;
-      transition: background 0.3s;
-    }
-
-    button:hover {
-      background: #0c5fd3;
-    }
-
-    .history {
-      margin-top: 20px;
-      text-align: left;
-      display: none;
-    }
-
-    .history ul {
-      list-style: none;
-      padding: 0;
-    }
-
-    .history ul li {
-      background: #f1f3f4;
-      margin: 5px 0;
-      padding: 8px 12px;
-      border-radius: 8px;
-      font-size: 0.9rem;
-    }
-
-    .show-history-btn {
-      background: #e8eaed;
-      color: #333;
-      margin-top: 15px;
+      transition: width 0.3s ease;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Password Strength Analyzer</h1>
-    <input type="password" id="password" placeholder="Enter your password">
-    <button class="toggle-btn" onclick="togglePassword()">Show Password</button>
-
-    <div class="strength-bar">
-      <div class="strength-fill" id="strength-fill"></div>
+    <h2>Password Strength Analyzer</h2>
+    <div class="input-wrapper">
+      <input type="password" id="password" placeholder="Enter password" oninput="checkStrength()" maxlength="20" />
+      <span class="toggle-btn" onclick="togglePassword()">👁</span>
     </div>
-    <div class="strength-text" id="strength-text">Strength: N/A</div>
-
-    <button onclick="savePassword()">Save Password</button>
-    <button class="show-history-btn" onclick="toggleHistory()">Show History</button>
-
-    <div class="history" id="history">
-      <h3>Saved Passwords:</h3>
-      <ul id="history-list"></ul>
-    </div>
+    <div class="strength" id="strength-text">Strength: </div>
+    <div class="bar"><div class="bar-fill" id="bar-fill"></div></div>
   </div>
 
   <script>
-    const passwordInput = document.getElementById("password");
-    const strengthFill = document.getElementById("strength-fill");
-    const strengthText = document.getElementById("strength-text");
-    const historyList = document.getElementById("history-list");
-    const historyDiv = document.getElementById("history");
-    let history = [];
-
-    // Password strength checker
-    passwordInput.addEventListener("input", () => {
-      const pwd = passwordInput.value;
-      analyzeStrength(pwd);
-    });
-
-    function analyzeStrength(password) {
+    function checkStrength() {
+      const pwd = document.getElementById("password").value;
+      const text = document.getElementById("strength-text");
+      const bar = document.getElementById("bar-fill");
       let strength = 0;
 
-      if (password.length > 5) strength++;
-      if (password.length > 10) strength++;
-      if (/[A-Z]/.test(password)) strength++;
-      if (/[0-9]/.test(password)) strength++;
-      if (/[^A-Za-z0-9]/.test(password)) strength++;
+      if (pwd.length >= 8) strength++;
+      if (/[A-Z]/.test(pwd)) strength++;
+      if (/[0-9]/.test(pwd)) strength++;
+      if (/[^A-Za-z0-9]/.test(pwd)) strength++;
 
-      let width = (strength / 5) * 100;
-      let color;
-      let label;
+      let strengthText = "";
+      let barColor = "";
+      let barWidth = "";
 
-      if (strength <= 1) {
-        color = "red";
-        label = "Weak";
-      } else if (strength <= 3) {
-        color = "orange";
-        label = "Medium";
-      } else {
-        color = "green";
-        label = "Strong";
+      switch(strength) {
+        case 0:
+        case 1:
+          strengthText = "Weak";
+          barColor = "red";
+          barWidth = "25%";
+          break;
+        case 2:
+          strengthText = "Moderate";
+          barColor = "orange";
+          barWidth = "50%";
+          break;
+        case 3:
+          strengthText = "Strong";
+          barColor = "blue";
+          barWidth = "75%";
+          break;
+        case 4:
+          strengthText = "Very Strong";
+          barColor = "green";
+          barWidth = "100%";
+          break;
       }
 
-      strengthFill.style.width = width + "%";
-      strengthFill.style.background = color;
-      strengthText.textContent = "Strength: " + label;
+      text.textContent = "Strength: " + strengthText;
+      bar.style.width = barWidth;
+      bar.style.background = barColor;
     }
 
-    // Show/Hide password
     function togglePassword() {
-      const type = passwordInput.type === "password" ? "text" : "password";
-      passwordInput.type = type;
-    }
-
-    // Save password (history in-memory)
-    function savePassword() {
-      const pwd = passwordInput.value;
-      if (pwd && pwd.length <= 20) {
-        history.push(pwd);
-        updateHistory();
-        passwordInput.value = "";
-        analyzeStrength("");
-      } else if (pwd.length > 20) {
-        alert("Password cannot exceed 20 characters!");
+      const input = document.getElementById("password");
+      const toggleBtn = document.querySelector(".toggle-btn");
+      if (input.type === "password") {
+        input.type = "text";
+        toggleBtn.textContent = "🙈";  // change icon when visible
       } else {
-        alert("Enter a password first!");
+        input.type = "password";
+        toggleBtn.textContent = "👁";  // change icon back
       }
-    }
-
-    function updateHistory() {
-      historyList.innerHTML = "";
-      history.forEach((pwd, index) => {
-        const li = document.createElement("li");
-        li.textContent = pwd;
-        historyList.appendChild(li);
-      });
-    }
-
-    function toggleHistory() {
-      historyDiv.style.display = historyDiv.style.display === "none" ? "block" : "none";
     }
   </script>
 </body>
